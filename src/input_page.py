@@ -61,7 +61,7 @@ input_layout = html.Div(
                                 dbc.Row(
                                     [
                                         html.Label(
-                                            "Data:*",
+                                            "State:*",
                                             style={
                                                 "width": "150px",
                                                 "display": "inline-block",
@@ -118,6 +118,7 @@ input_layout = html.Div(
                     [
                         html.H3("Calculated Output"),
                         html.Hr(style={"border-width": "1px"}),
+                        html.Div(id="output_gen_display"),
                     ],
                     style={"width": "50%"},
                 ),
