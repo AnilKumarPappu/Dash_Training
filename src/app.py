@@ -4,6 +4,7 @@ from dash_table import DataTable
 from dash import dcc, html
 import dash
 import dash_bootstrap_components as dbc
+from dash.dependencies import Input, Output
 
 
 from call_backs import register_callbacks
@@ -22,6 +23,11 @@ with open("about.json", "r") as file:
 # Define the navigation bar layout
 app.layout = html.Div(
     [
+        dcc.Store(id="lat_store", data=56),
+        dcc.Store(id="long_store", data=45),
+        dcc.Store(id="data_store", data="year"),
+        dcc.Store(id="country_store", data="India"),
+        # dcc.Store(id="dummy_out"),
         dcc.Location(id="url", refresh=False),  # Location component to track the URL
         dbc.Row(
             [
@@ -95,8 +101,26 @@ app.layout = html.Div(
             style={"backgroundColor": "blue", "height": 50},
         ),
         dbc.Row(id="page-content"),  # Placeholder for the page content
+        # html.Div(
+        #     [
+        #         html.Div(id="display-store-1"),
+        #         # html.Div(id='display-store-2'),
+        #         # html.Div(id='display-store-3'),
+        #     ]
+        # ),
     ]
 )
+# app.layout.children[7].children[0].children = [
+#     html.Div("Stored Data for Store 2: ", style={"fontWeight": "bold"}),
+#     html.Pre(id="display-store-1-html"),
+# ]
+# print(app.layout["lat_store"].data)
+# app.layout["display-store-1-html"].children = f'{app.layout["lat_store"]}'
+
+
+# @app.callback(Output("display-store-1-html", "children"), Input("lat_store", "data"))
+# def display_lat_store(data):
+#     return f"Stored Data for lat_store: {data}"
 
 
 # ################################

@@ -3,7 +3,7 @@ import json
 import pandas as pd
 from dash import dcc, html
 import dash_bootstrap_components as dbc
-
+from app2 import gapMinder
 from dash.dependencies import Input, Output
 
 
@@ -11,12 +11,6 @@ from dash_table import DataTable
 
 with open("about.json", "r") as file:
     table = json.load(file)
-
-gapMinder = pd.read_csv(
-    "https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv"
-)
-# print(gapMinder.columns)
-gapMinder = gapMinder[["continent", "country", "pop", "lifeExp"]]
 
 
 continent_options = [

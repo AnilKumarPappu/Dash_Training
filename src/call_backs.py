@@ -1,11 +1,15 @@
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import pandas as pd
 from app2 import app, gapMinder
 from dash.exceptions import PreventUpdate
 
 from about_page import about_page
 from input_page import input_page
+from simulation_page import simulation_page
 from dash import dcc, html
+import plotly.express as px
+import plotly.graph_objects as go
+import dash_leaflet as dl
 
 
 def csv_download():
@@ -73,11 +77,147 @@ def page_Selection():
         elif pathname == "/page-2":
             return input_page()
         elif pathname == "/page-3":
-            return html.Div(
-                [html.H3("Simulation"), html.P("This is content for Page 3.")]
-            )
+            return simulation_page()
         else:
             return about_page()
+
+
+# output generated msg at input page
+def out_gen():
+    @app.callback(
+        Output("output_gen_display", "children"), [Input("simulate-button", "n_clicks")]
+    )
+    def output_gen(clicks):
+        if clicks is None:
+            raise PreventUpdate
+        return "Output generated"
+
+
+# callback for simulation page
+def simulation_input():
+    @app.callback(
+        [
+            Output("lat_store", "data"),
+            Output("long_store", "data"),
+            Output("data_store", "data"),
+            Output("country_store", "data"),
+        ],
+        [Input("simulate-button", "n_clicks")],
+        [
+            State("input_latitude", "value"),
+            State("input_longitude", "value"),
+            State("input_data", "value"),
+            State("input_country", "value"),
+        ],
+    )
+    def input_simulation(n_clicks, latitude, longitude, state, country):
+        if (state != "country") & (state != "year"):
+            raise PreventUpdate
+        country_list = gapMinder["country"].unique().tolist()
+        if country not in country_list:
+            raise PreventUpdate
+        out_1 = latitude
+        out_2 = longitude
+        out_3 = state
+        out_4 = country
+        return out_1, out_2, out_3, out_4
+
+
+# call back to display input
+def display_input():
+    @app.callback(
+        Output("lat_display", "children"),
+        Output("log_display", "children"),
+        Output("data_display", "children"),
+        Output("country_display", "children"),
+        [
+            Input("lat_store", "data"),
+            Input("long_store", "data"),
+            Input("data_store", "data"),
+            Input("country_store", "data"),
+        ],
+    )
+    def input_display(lat, log, state, country):
+        return lat, log, state, country
+
+
+# map for simulation
+def map_simulation():
+    @app.callback(
+        Output("map-output", "children"),
+        Output("map-output", "center"),
+        [Input("lat_store", "data"), Input("long_store", "data")],
+    )
+    def simulation_map(latitude, longitude):
+        if (latitude is None) & (longitude is None):
+            raise PreventUpdate
+        # print(type(latitude))
+        marker = dl.Marker(
+            position=[latitude, longitude],
+            children=[dl.Tooltip(f"Latitude: {latitude}, Longitude: {longitude}")],
+        )
+        center = [latitude, longitude]
+        # print(center)
+        # print(marker)
+        return [dl.TileLayer(), marker], center
+
+
+# display country information
+def info_country():
+    @app.callback(
+        Output("gdp_display", "children"),
+        Output("pop_display", "children"),
+        Output("life_display", "children"),
+        [Input("country_store", "data")],
+    )
+    def country_info(country):
+        gdp_country = gapMinder[gapMinder["country"] == country]
+        gdp = gdp_country[gdp_country["year"] == gdp_country["year"].max()]["gdpPercap"]
+
+        pop_country = gapMinder[gapMinder["country"] == country]
+        pop = pop_country[pop_country["year"] == pop_country["year"].max()]["pop"]
+
+        life = gapMinder[gapMinder["country"] == country]["lifeExp"].mean()
+        return gdp, pop, life
+
+
+# bar plot for pop on year for a country
+def barplot_pop():
+    @app.callback(
+        Output("bar_plot_pop", "figure"),
+        [Input("country_store", "data")],
+    )
+    def update_bar_plot(selected_country):
+        filtered_gapMinder = gapMinder[gapMinder["country"] == selected_country]
+        fig = px.bar(
+            filtered_gapMinder,
+            x="year",
+            y="pop",
+            color="lifeExp",
+            labels={"pop": "Population", "lifeExp": "Life Expectancy"},
+            title=f"Bar Plot for {selected_country}",
+        )
+        return fig
+
+
+# bar plot for GDP on year or countries
+def barplot_GDP():
+    @app.callback(
+        Output("bar_plot_gdp", "figure"),
+        [Input("data_store", "data")],
+    )
+    def update_bar_plot(selected_state):
+        X = selected_state
+        # filtered_gapMinder = gapMinder[gapMinder["country"] == selected_country]
+        fig = px.bar(
+            gapMinder,
+            x=X,
+            y="gdpPercap",
+            labels={"gdpPercap": "GDP per capita"},
+            title=f"GDP per capita over {selected_state}",
+        )
+        # fig.update_layout(barmode="stack")
+        return fig
 
 
 # # Registering all callbacks
@@ -87,3 +227,11 @@ def register_callbacks(app):
     list_country()
     dataframe_update()
     csv_download()
+    simulation_input()
+    # assig()
+    map_simulation()
+    display_input()
+    info_country()
+    barplot_pop()
+    barplot_GDP()
+    out_gen()
