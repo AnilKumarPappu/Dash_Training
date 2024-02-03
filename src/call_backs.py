@@ -1,15 +1,22 @@
 from dash.dependencies import Input, Output, State
+from flask import redirect, url_for
+from flask_login import current_user
 import pandas as pd
 from app2 import app, gapMinder
 from dash.exceptions import PreventUpdate
+from app_auth import server as flask_app
 
 from about_page import about_page
 from input_page import input_page
+from log_out import logout_page, log_after_logout
 from simulation_page import simulation_page
+from login_page import login_page
 from dash import dcc, html
 import plotly.express as px
 import plotly.graph_objects as go
 import dash_leaflet as dl
+
+from sub_main import sub_main
 
 
 def csv_download():
@@ -70,16 +77,52 @@ def pagesize_update():
 
 # # Callback to update the page content based on the URL
 def page_Selection():
-    @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
-    def display_page(pathname):
+    @app.callback(
+        Output("page-content", "children"),
+        [Input("url", "pathname")],
+        [State("valid_user", "data")],
+    )
+    def display_page(pathname, valid_user):
+        print("display_page")
+
         if pathname == "/page-1":
             return about_page()
         elif pathname == "/page-2":
             return input_page()
         elif pathname == "/page-3":
             return simulation_page()
-        else:
+        elif pathname == "/page-4":
+            raise PreventUpdate
+        elif valid_user == 1:
             return about_page()
+        else:
+            return login_page()
+
+
+# # Callback to update the page content based on the URL
+def page_selection_logout():
+    @app.callback(
+        Output("main_layout", "children", allow_duplicate=True),
+        [Input("url", "pathname")],
+        [State("valid_user", "data")],
+        prevent_initial_call=True,
+    )
+    def display_page_logout(pathname, valid_user):
+        print("display_page_logout")
+
+        # if pathname == "/page-1":
+        #     return about_page()
+        # elif pathname == "/page-2":
+        #     return input_page()
+        # elif pathname == "/page-3":
+        #     return simulation_page()
+        if pathname == "/page-4":
+            return logout_page()
+        elif valid_user == 0:
+            return log_after_logout()
+
+        else:
+            raise PreventUpdate
 
 
 # output generated msg at input page
@@ -220,6 +263,73 @@ def barplot_GDP():
         return fig
 
 
+# flask login
+def login_flask():
+    # Callback to handle login button click
+    @app.callback(
+        [
+            Output("main_layout", "children", allow_duplicate=True),
+            Output("valid_user", "data", allow_duplicate=True),
+        ],
+        [Input("login-button", "n_clicks")],
+        [State("username-input", "value"), State("password-input", "value")],
+        prevent_initial_call=True,
+        # allow_duplicate=True,
+    )
+    def handle_login(n_clicks, username, password):
+        print("login_flask")
+        print(n_clicks)
+        if n_clicks is None:
+            print("into prevent update")
+            raise PreventUpdate
+        elif n_clicks and username and password:
+            # Send login request to the Flask server
+            print("before login")
+            response = flask_app.test_client().post(
+                "/login",
+                data={"username": username, "password": password},
+                follow_redirects=True,
+            )
+            print(response)
+            if response.status_code == 200:
+                # return f"Login successful! Welcome, {current_user.username}!"
+                return sub_main(), 1
+            else:
+                return "Login failed. Please check your credentials.", 0
+        else:
+            print("into else")
+            return "username or password are not entered", 0
+
+
+def logout_flask():
+    @app.callback(
+        Output("valid_user", "data", allow_duplicate=True),
+        [Input("url", "pathname")],
+        prevent_initial_call=True,
+        allow_duplicate=True,
+    )
+    def logout_user(pathname):
+        if pathname == "/page-4":
+            return 0
+        else:
+            raise PreventUpdate
+
+
+def goto_home_page():
+    @app.callback(
+        Output("url", "pathname"),
+        [Input("goto_home_button", "n_clicks")],
+        prevent_initial_call=True,
+    )
+    def go_to_base_link(n_clicks):
+        if n_clicks:
+            print("go to home page")
+            return "/"
+        else:
+            # If the button hasn't been clicked, keep the current URL
+            raise PreventUpdate
+
+
 # # Registering all callbacks
 def register_callbacks(app):
     page_Selection()
@@ -235,3 +345,7 @@ def register_callbacks(app):
     barplot_pop()
     barplot_GDP()
     out_gen()
+    login_flask()
+    logout_flask()
+    page_selection_logout()
+    goto_home_page()
