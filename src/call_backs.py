@@ -1,6 +1,5 @@
 from dash.dependencies import Input, Output, State
 from flask import redirect, url_for
-from flask_login import current_user
 import pandas as pd
 from app2 import app, gapMinder
 from dash.exceptions import PreventUpdate
