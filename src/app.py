@@ -9,7 +9,7 @@ from dash.dependencies import Input, Output
 
 from call_backs import register_callbacks
 from app2 import app
-from login_page import login_layout
+from views.login_page import login_layout
 
 # from app2 import gapMinder
 

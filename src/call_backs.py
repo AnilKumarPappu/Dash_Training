@@ -1,18 +1,15 @@
 from dash.dependencies import Input, Output, State
-from flask import redirect, url_for
 import pandas as pd
 from app2 import app, gapMinder
 from dash.exceptions import PreventUpdate
 from app_auth import server as flask_app
 
-from about_page import about_page
-from input_page import input_page
-from log_out import logout_page, log_after_logout
-from simulation_page import simulation_page
-from login_page import login_page
-from dash import dcc, html
+from views.about_page import about_page
+from views.input_page import input_page
+from views.log_out import logout_page, log_after_logout
+from views.simulation_page import simulation_page
+from views.login_page import login_page
 import plotly.express as px
-import plotly.graph_objects as go
 import dash_leaflet as dl
 
 from sub_main import sub_main

@@ -10,7 +10,7 @@ app = dash.Dash(__name__, server=flask_app, suppress_callback_exceptions=True)
 # gapMinder_raw = pd.read_csv(
 #     "https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv"
 # )
-gapMinder_raw = pd.read_csv("gapminderDataFiveYear.csv")
+gapMinder_raw = pd.read_csv("assets/gapminderDataFiveYear.csv")
 # print(gapMinder.columns)
 gapMinder = gapMinder_raw[
     ["continent", "country", "pop", "lifeExp", "gdpPercap", "year"]

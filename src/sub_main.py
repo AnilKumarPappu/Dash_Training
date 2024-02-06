@@ -1,6 +1,6 @@
 from dash import dcc, html
 import dash_bootstrap_components as dbc
-from about_page import about_layout
+from views.about_page import about_layout
 
 
 def sub_main():
